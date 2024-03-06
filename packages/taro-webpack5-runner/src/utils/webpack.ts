@@ -9,10 +9,14 @@ const { ConcatSource } = sources
 /**
  * 在文本头部加入一些 require 语句
  */
-export function addRequireToSource (id: string, modules: sources.Source, commonChunks: (Chunk | { name: string })[]) {
+export function addRequireToSource (id: string, modules: sources.Source, commonChunks: (Chunk | { name: string, async?:boolean })[]) {
   const source = new ConcatSource()
   commonChunks.forEach(chunkItem => {
-    source.add(`require(${JSON.stringify(promoteRelativePath(path.relative(id, chunkItem.name)))});\n`)
+    if ((chunkItem as unknown as { name: string, async?:boolean }).async) {
+      source.add(`require.async(${JSON.stringify(promoteRelativePath(path.relative(id, chunkItem.name)))});\n`)
+    } else {
+      source.add(`require(${JSON.stringify(promoteRelativePath(path.relative(id, chunkItem.name)))});\n`)
+    }
   })
   source.add('\n')
   source.add(modules)

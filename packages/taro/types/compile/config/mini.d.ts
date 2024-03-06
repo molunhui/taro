@@ -87,7 +87,7 @@ export interface IMiniAppConfig {
   commonChunks?: string[] | ((commonChunks: string[]) => string[])
 
   /** 为某些页面单独指定需要引用的公共文件 */
-  addChunkPages?: (pages: Map<string, string[]>, pagesNames?: string[]) => void
+  addChunkPages?: (pages: Map<string, Array<string | {name: string, async?: boolean}>>, pagesNames?: string[]) => void
 
   /** 优化主包的体积大小 */
   optimizeMainPackage?: {

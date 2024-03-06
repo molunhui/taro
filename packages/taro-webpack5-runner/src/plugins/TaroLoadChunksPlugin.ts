@@ -47,7 +47,7 @@ export default class TaroLoadChunksPlugin {
 
   apply (compiler: Compiler) {
     const pagesList = this.pages
-    const addChunkPagesList = new Map<string, string[]>()
+    const addChunkPagesList = new Map<string, Array<string | {name: string, async?: boolean}>>()
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation: Compilation) => {
       let commonChunks
       const fileChunks = new Map<string, { name: string }[]>()
@@ -82,7 +82,12 @@ export default class TaroLoadChunksPlugin {
             const id = getChunkIdOrName(chunk)
             addChunkPagesList.forEach((deps, pageName) => {
               if (pageName === id) {
-                const depChunks = deps.map(dep => ({ name: dep }))
+                const depChunks = deps.map(dep => {
+                  if (typeof dep === 'string') {
+                    return { name: dep }
+                  }
+                  return dep
+                })
                 fileChunks.set(id, depChunks)
               }
             })

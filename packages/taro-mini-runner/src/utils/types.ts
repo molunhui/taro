@@ -61,4 +61,4 @@ export interface IBuildConfig extends IProjectBaseConfig, IMiniAppConfig {
   template: RecursiveTemplate | UnRecursiveTemplate
 }
 
-export type AddPageChunks = ((pages: Map<string, string[]>, pagesNames?: string[]) => void)
+export type AddPageChunks = ((pages: Map<string, Array<string | {name: string, async?: boolean}>>, pagesNames?: string[]) => void)

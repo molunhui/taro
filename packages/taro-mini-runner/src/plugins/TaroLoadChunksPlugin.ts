@@ -51,7 +51,7 @@ export default class TaroLoadChunksPlugin {
 
   apply (compiler: webpack.Compiler) {
     const pagesList = this.pages
-    const addChunkPagesList = new Map<string, string[]>()
+    const addChunkPagesList = new Map<string, Array<string | {name: string, async?: boolean}>>()
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation: any) => {
       let commonChunks
       const fileChunks = new Map<string, { name: string }[]>()
@@ -85,7 +85,12 @@ export default class TaroLoadChunksPlugin {
             const id = getIdOrName(chunk)
             addChunkPagesList.forEach((deps, pageName) => {
               if (pageName === id) {
-                const depChunks = deps.map(dep => ({ name: dep }))
+                const depChunks = deps.map(dep => {
+                  if (typeof dep === 'string') {
+                    return { name: dep }
+                  }
+                  return dep
+                })
                 fileChunks.set(id, depChunks)
               }
             })
@@ -181,10 +186,15 @@ export function getIdOrName (chunk: webpack.compilation.Chunk) {
 /**
  * 在文本头部加入一些 require 语句
  */
-export function addRequireToSource (id: string, modules: ConcatSource, commonChunks: (webpack.compilation.Chunk | { name: string })[]) {
+export function addRequireToSource (id: string, modules: ConcatSource, commonChunks: (webpack.compilation.Chunk | { name: string, async?: boolean })[]) {
   const source = new ConcatSource()
-  commonChunks.forEach(chunkItem => {
-    source.add(`require(${JSON.stringify(promoteRelativePath(path.relative(id, chunkItem.name)))});\n`)
+  commonChunks.forEach((chunkItem) => {
+    if ((chunkItem as unknown as { name: string, async?:boolean }).async) {
+      source.add(`require.async(${JSON.stringify(promoteRelativePath(path.relative(id, chunkItem.name)))});\n`)
+
+    } else {
+      source.add(`require(${JSON.stringify(promoteRelativePath(path.relative(id, chunkItem.name)))});\n`)
+    }
   })
   source.add('\n')
   source.add(modules)
